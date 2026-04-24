@@ -41,7 +41,7 @@ yargs(hideBin(process.argv)).command("init", "Initialize a new repository", {}, 
                 type: "string"
             }
         )
-    }, revertFile)
+    }, (argv) => revertFile(argv.commitId))
     .demandCommand(1, "Please provide a command")
     .help()
     .argv;
