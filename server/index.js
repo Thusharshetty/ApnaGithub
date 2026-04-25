@@ -1,7 +1,12 @@
 const yargs = require("yargs");
 const { hideBin } = require("yargs/helpers");
 require("dotenv").config();
-
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const http = require("http");
+const {Server}= require("socket.io");
 
 const { initRepo } = require("./controllers/init");
 const { addFile } = require("./controllers/add");
@@ -15,7 +20,9 @@ const { revertFile } = require("./controllers/revert");
 
 
 
-yargs(hideBin(process.argv)).command("init", "Initialize a new repository", {}, initRepo)
+yargs(hideBin(process.argv))
+.command("start","Starts the server",{}, startServer)
+.command("init", "Initialize a new repository", {}, initRepo)
     .command("add <file>", "Add a file to the repository", (yargs) => {
         yargs.positional("file",
             {
@@ -45,3 +52,16 @@ yargs(hideBin(process.argv)).command("init", "Initialize a new repository", {}, 
     .demandCommand(1, "Please provide a command")
     .help()
     .argv;
+
+function startServer() {
+    const app = express();
+    const port= process.env.PORT || 3000;
+    app.use(bodyParser.json());
+    app.use(express.json());
+    const monogoUrl= process.env.MONGODB_URL;
+    mongoose
+    .connect(monogoUrl)
+    .then(()=>{console.log("Connected to MongoDB!!")})
+    .catch((err)=>{console.log("Unable to connect", err)});
+    app.use(cors(({origin: "*"})));
+}
