@@ -64,4 +64,31 @@ function startServer() {
     .then(()=>{console.log("Connected to MongoDB!!")})
     .catch((err)=>{console.log("Unable to connect", err)});
     app.use(cors(({origin: "*"})));
+    app.get("/", (req, res) => {
+        res.send("Hello World!");
+    });
+    let user="test";
+    const httpServer =http.createServer(app);
+    const io=new Server(httpServer,{
+        cors:{
+            origin: "*",
+            methods: ["GET", "POST"]
+        }
+    });
+    io.on("connection",(socket)=>{
+        socket.on("joinRoom",(userId)=>{
+            user=userId;
+            console.log("======");
+            console.log("User connected:", user);
+            console.log("======");
+            socket.join(user);
+        });
+    });
+    const db=mongoose.connection;
+    db.once("open",()=>{
+        console.log("CRUD operations called!");
+    });
+    httpServer.listen(port,()=>{
+        console.log(`Server is running on port ${port}`);
+    });
 }
