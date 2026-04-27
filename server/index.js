@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const http = require("http");
 const {Server}= require("socket.io");
+const mainRouter=require("./routes/main.router");
 
 const { initRepo } = require("./controllers/init");
 const { addFile } = require("./controllers/add");
@@ -64,9 +65,7 @@ function startServer() {
     .then(()=>{console.log("Connected to MongoDB!!")})
     .catch((err)=>{console.log("Unable to connect", err)});
     app.use(cors(({origin: "*"})));
-    app.get("/", (req, res) => {
-        res.send("Hello World!");
-    });
+    app.use("/",mainRouter);
     let user="test";
     const httpServer =http.createServer(app);
     const io=new Server(httpServer,{
