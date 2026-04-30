@@ -2,6 +2,7 @@ const jwt=require("jsonwebtoken");
 const bcrypt=require("bcryptjs");
 const {MongoClient}=require("mongodb");
 require("dotenv").config();
+var ObjectId = require('mongodb').ObjectId;
 
 const uri=process.env.MONGODB_URL;
 
@@ -15,9 +16,7 @@ async function connectClient() {
 }
 
 
-const getAllUsers=(req,res)=>{
-    res.send("All users")
-}
+
 
 const signup= async(req,res)=>{
    const {username,password,email}=req.body;
@@ -76,14 +75,82 @@ const login=async(req,res)=>{
         res.status(500).json({message:"Internal server error"})
     }
 }
-const getUserProfile=(req,res)=>{
-    res.send("User profile")
+
+const getAllUsers= async (req,res)=>{
+   try{
+     await connectClient();
+     const db=client.db("githubClone");
+     const userCollection=db.collection("users");
+      const users=await userCollection.find({}).toArray();
+    res.status(200).json(users)
+
+   }catch(error){
+    console.error("Error fetching users:",error);
+    res.status(500).json({message:"Internal server error"})
+   }
 }
-const updateUserProfile=(req,res)=>{
-    res.send("User profile updated")
+const getUserProfile= async (req,res)=>{
+    const currentId=req.params.id;
+    try{
+        await connectClient();
+     const db=client.db("githubClone");
+     const userCollection=db.collection("users");
+     const user=await userCollection.findOne({_id:new ObjectId(currentId)});
+     if(!user){
+        return res.status(404).json({message:"User not found"})
+     }      
+     res.status(200).json(user)
+
+    }catch(error){
+        console.error("Error fetching user profile:",error);
+        res.status(500).json({message:"Internal server error"})
+    }
 }
-const deleteUserProfile=(req,res)=>{
-    res.send("User profile deleted")
+const updateUserProfile=  async (req,res)=>{
+    const currentId=req.params.id;
+    const {email,password}=req.body;
+    try{
+        await connectClient();
+     const db=client.db("githubClone");
+     const userCollection=db.collection("users");
+     let updateFields={};
+     if(email){
+        updateFields.email=email;
+     }
+    if(password){
+        const salt= await bcrypt.genSalt(10);
+        const hashedPassword=await bcrypt.hash(password,salt);
+        updateFields.password=hashedPassword;
+    }
+    const result=await userCollection.findOneAndUpdate({
+        _id:new ObjectId(currentId)
+    },{$set:updateFields},{
+        returnDocument:"after"
+    });
+    if(!result){
+        return res.status(404).json({message:"User not found"})
+    }
+    res.status(200).json({message:"Profile updated successfully",user:result.value})
+    }catch(error){
+        console.error("Error updating user profile:",error);
+        res.status(500).json({message:"Internal server error"})
+    }
+}
+const deleteUserProfile=async (req,res)=>{
+   const currentId=req.params.id;
+   try{
+    await connectClient();
+     const db=client.db("githubClone");
+     const userCollection=db.collection("users");
+     const result=await userCollection.deleteOne({_id:new ObjectId(currentId)});
+     if(result.deletedCount===0){
+        return res.status(404).json({message:"User not found"})
+     }
+        res.status(200).json({message:"User profile deleted successfully"})
+   }catch(error){
+    console.error("Error deleting user profile:",error);
+    res.status(500).json({message:"Internal server error"})
+   }
 }
  module.exports={
     getAllUsers,
