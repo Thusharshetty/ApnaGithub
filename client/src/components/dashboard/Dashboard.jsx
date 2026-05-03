@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import './dashboard.css'
+import './dashboard.css';
+import DashboardNavbar from "../DashBoardNavbar";
 
 
 export default function Dashboard(){
@@ -46,6 +47,7 @@ export default function Dashboard(){
 
     return(
         <>
+        <DashboardNavbar />
        <section id="dashboard">
         <aside>
             <h3>Suggested repositories</h3>
@@ -69,7 +71,7 @@ export default function Dashboard(){
                 value={searchQuery}
                 onChange={(e)=>setSearchQuery(e.target.value)}/>
                 </div>
-                {repositories.map(repo=>(
+                {searchResults.map(repo=>(
                     <div key={repo._id}>
                         <h2>{repo.name}</h2>
                         <p>{repo.description}</p>
